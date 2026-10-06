@@ -1,0 +1,4 @@
+geopandas>=1.0
+pyogrio>=0.9
+matplotlib>=3.8
+pyyaml>=6.0
