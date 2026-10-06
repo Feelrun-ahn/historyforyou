@@ -12,6 +12,7 @@ FILES = {
     "ne_50m_land.geojson": "ne_50m_land.geojson",
     "ne_50m_rivers.geojson": "ne_50m_rivers_lake_centerlines.geojson",
     "ne_50m_lakes.geojson": "ne_50m_lakes.geojson",
+    "ne_50m_admin_0_countries.geojson": "ne_50m_admin_0_countries.geojson",  # 수정 작업의 지역 범위용
 }
 
 

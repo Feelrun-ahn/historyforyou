@@ -1,0 +1,96 @@
+# 한반도 수정 작업 (pipeline/patches.py 가 순서대로 실행)
+# 사람이 읽는 설명·근거는 korea.yaml, 여기는 실제로 데이터를 바꾸는 명령이에요.
+# id 는 korea.yaml 의 항목 번호와 같아요.
+
+regions:
+  korea: {type: countries, iso: [KOR, PRK], sea_buffer: 0.6}
+  korea_land: {type: countries, iso: [KOR, PRK], sea_buffer: 0.0}
+  # 천리장성(1033~1044, 압록강 하구~도련포) 남쪽 — 고려 북쪽 경계의 대략적인 선
+  goryeo_north:
+    type: polygon
+    coords: [[124.0, 40.3], [124.4, 40.3], [125.0, 40.48], [125.8, 40.42], [126.4, 40.12], [126.95, 39.9], [127.5, 39.78], [127.9, 39.6], [127.9, 38.2], [124.0, 38.2], [124.0, 40.05]]
+  # 자비령 이북 서북면 (동녕부, 1270~1290) — 대략적인 범위
+  dongnyeong:
+    type: polygon
+    coords: [[123.9, 38.62], [125.6, 38.55], [126.25, 38.62], [126.75, 39.1], [127.05, 39.8], [127.3, 40.6], [126.9, 41.3], [125.5, 41.0], [123.9, 40.2], [123.9, 38.62]]
+  # 철령 이북 화주 일대 (쌍성총관부, 1258~1356) — 대략적인 범위
+  ssangseong:
+    type: polygon
+    coords: [[126.85, 38.95], [127.6, 38.8], [129.3, 39.4], [129.3, 40.75], [127.3, 40.75], [126.85, 39.6], [126.85, 38.95]]
+  jeju: {type: bbox, bbox: [125.9, 32.9, 127.2, 33.75]}
+  goryeo_north_land: {type: intersect, of: [goryeo_north, korea_land]}
+  ssangseong_land: {type: intersect, of: [ssangseong, korea_land]}
+  dongnyeong_land: {type: intersect, of: [dongnyeong, korea_land]}
+  ulleungdo: {type: circle, circle: [130.8656, 37.505, 0.06]}
+  dokdo: {type: circle, circle: [131.8653, 37.2412, 0.022]}
+
+wikidata_fix:
+  Republic of Korea: Q884
+  Gojoseon: ""      # 조선과 같은 ID 로 잘못 들어가 있어서 일단 비움 (확인 후 채우기)
+  Joseon: ""
+
+ops:
+  # ---------------- 고대
+  - {id: K16, op: transfer, src: Gojoseon, dst: Han Dynasty, years: [-107, -92]}
+  - {id: K19, op: transfer, src: Dong-okjeo, dst: Goguryeo, years: [57, 153]}
+  - {id: K14, op: rename, name: Byeonhan, years: [42, 562], to: Gaya, Wikipedia: Gaya confederacy}
+  - {id: K14, op: transfer, src: Byeonhan, dst: Silla, years: [563, 566]}
+
+  # ---------------- 삼국 통일 ~ 남북국
+  - {id: K01, op: delete, name: Goguryeo, years: [674, 681]}
+  - {id: K01, op: rename, name: Goguryeo, years: [669, 673], to: Protectorate General to Pacify the East,
+     MemberOf: Tang Dynasty, Wikipedia: Protectorate General to Pacify the East}
+  - {id: K02, op: rename, name: Silla, years: [676, 681], to: Unified Silla}
+  - {id: K02, op: restore, name: Unified Silla, years: [676, 681], from_year: 682}
+  - {id: K03, op: retime, name: Balhae, start: 698}
+
+  # ---------------- 후삼국
+  - {id: K04, op: retime, name: Taebong, start: 901}
+  - {id: K04, op: retime, name: Taebong, end: 917}
+  - {id: K06, op: retime, name: Goryeo, start: 918}
+  - {id: K05, op: retime, name: Hubaekje, end: 936}
+
+  # ---------------- 고려
+  - {id: K21, op: expand, name: Goryeo, years: [994, 1259], region: goryeo_north_land}
+  - {id: K08, op: transfer, src: Tamna, dst: Goryeo, years: [1105, 1259]}
+  - {id: K08, op: delete, name: Tamna, years: [1260, 1278]}
+  - {id: K07, op: restore, name: Goryeo, years: [1260, 1355], from_year: 1259}
+  - {id: K07, op: restore, name: Goryeo, years: [1356, 1362], from_year: 1363}
+  - {id: K07, op: extract, names: [Mongol Empire, Yuan Dynasty, Goryeo], years: [1258, 1355], region: ssangseong_land,
+     to: Ssangseong Prefecture, meta: {MemberOf: Yuan Dynasty}}
+  - {id: K07, op: extract, names: [Goryeo, Mongol Empire], years: [1270, 1289], region: dongnyeong_land,
+     to: Dongnyeong Prefecture, meta: {MemberOf: Yuan Dynasty}}
+  - {id: K07, op: extract, names: [Goryeo], years: [1273, 1293], region: jeju,
+     to: Tamna Prefectures, meta: {MemberOf: Yuan Dynasty, Wikipedia: Tamna Prefectures}}
+
+  # ---------------- 조선 ~ 대한제국
+  - {id: K09, op: retime, name: Goryeo, end: 1391}
+  - {id: K09, op: retime, name: Joseon, start: 1392}
+  - {id: K10, op: restore, name: Joseon, years: [1595, 1599], from_year: 1594}
+  - {id: K11, op: restore, name: Joseon, years: [1636, 1639], from_year: 1635}
+  - {id: K11, op: rename, name: Later Jin Dynasty, years: [1636, 1644], to: Qing Dynasty}
+  - {id: K12, op: retime, name: Joseon, end: 1896}
+  - {id: K12, op: retime, name: Korean Empire, start: 1897}
+
+  # ---------------- 일제 강점기 ~ 정부 수립
+  - {id: K20, op: extract, names: [Empire of Japan], years: [1911, 1945], region: korea,
+     to: Korea under Japanese rule, meta: {MemberOf: Empire of Japan, Wikipedia: Korea under Japanese rule}}
+  - {id: K13, op: extract, names: [United States of America], years: [1946, 1947], region: korea,
+     to: US Army Military Government in Korea, meta: {Wikipedia: United States Army Military Government in Korea}}
+  - {id: K13, op: extract, names: [Union of Soviet Socialist Republics], years: [1946, 1947], region: korea,
+     to: Soviet Civil Administration in Korea, meta: {Wikipedia: Soviet Civil Administration}}
+  - {id: K13, op: erase, name: United States of America, years: [1948, 1966], region: korea}
+
+  # ---------------- 울릉도·독도 (512년 신라 이사부의 우산국 복속 이후)
+  - id: K17
+    op: islands
+    shapes: [ulleungdo, dokdo]
+    owners:
+      - {name: Silla, years: [512, 675]}
+      - {name: Unified Silla, years: [676, 935]}
+      - {name: Goryeo, years: [936, 1391]}
+      - {name: Joseon, years: [1392, 1896]}
+      - {name: Korean Empire, years: [1897, 1910]}
+      - {name: Korea under Japanese rule, years: [1911, 1945]}
+      - {name: US Army Military Government in Korea, years: [1946, 1947]}
+      - {name: Republic of Korea, years: [1948, 2024]}

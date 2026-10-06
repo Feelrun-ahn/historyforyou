@@ -45,6 +45,10 @@
     ['독도', 131.8653, 37.2412], ['울릉도', 130.8656, 37.505],
   ];
   const KOREA_AREA = 220000; // 한반도 면적 약 22만 km²
+  const ISLAND_INFO = {
+    독도: { en: 'Dokdo', text: '경상북도 울릉군에 속한 대한민국의 섬이에요. 512년 신라 이사부가 우산국(울릉도)을 복속한 뒤로 우리 역사 속 영토였고, 이 지도에서도 그 해부터 한반도 왕조의 영역에 넣었어요.' },
+    울릉도: { en: 'Ulleungdo', text: '옛 우산국이 있던 섬이에요. 512년 신라 이사부가 복속했어요. 지금은 경상북도 울릉군이에요.' },
+  };
 
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const $ = (id) => document.getElementById(id);
@@ -356,8 +360,8 @@
     if (!list.length) { el.hidden = true; return; }
     const high = list.some((n) => n.severity === 'high');
     $('notice-text').textContent = high
-      ? `이 시기 한반도 국경은 원본 데이터 오류가 있어요 (${list.length}건, 고칠 예정)`
-      : `이 시기 한반도 데이터에 확인 중인 내용이 있어요 (${list.length}건)`;
+      ? `이 시기 한반도 국경에 아직 고치지 못한 오류가 있어요 (${list.length}건)`
+      : `이 시기 한반도 데이터에 조사 중인 내용이 있어요 (${list.length}건)`;
     el.hidden = false;
   }
 
@@ -417,7 +421,8 @@
     const srcLabel = { ko: '한국어 이름: 번역(검수 전)', wd: '한국어 이름: 위키데이터', en: '한국어 이름 준비 중' }[P.src];
     tags.append(el('span', { class: 'tag', text: srcLabel }));
     const related = index.notices.filter((n) => P.f <= n.to && P.t >= n.from && n.bbox && P.x >= n.bbox[0] && P.x <= n.bbox[2] && P.yy >= n.bbox[1] && P.yy <= n.bbox[3]);
-    if (related.length) tags.append(el('span', { class: 'tag is-warn', text: '알려진 오류 있음' }));
+    if (P.fixed) tags.append(el('span', { class: 'tag is-ok', text: '한국사 기준으로 고친 데이터' }));
+    if (related.length) tags.append(el('span', { class: 'tag is-warn', text: '확인 중인 내용 있음' }));
 
     // 존속 기간 막대
     const span = el('div', { class: 'span-years', text: `${fmtYear(P.f)} ~ ${fmtYear(P.t)}` });
@@ -445,6 +450,10 @@
     facts.append(el('dt', { text: '존속' }), el('dd', { text: `약 ${(P.t - P.f + (P.f < 0 && P.t > 0 ? 0 : 1)).toLocaleString('ko-KR')}년` }));
 
     const kids = [tags, span, life, scale, status, facts];
+    if (P.note) {
+      kids.push(el('div', { class: 'section-title', text: '알아 두기' }));
+      kids.push(el('p', { class: 'note', text: P.note }));
+    }
 
     if (P.of && P.of.length) {
       kids.push(el('div', { class: 'section-title', text: '속한 큰 단위' }));
@@ -470,7 +479,7 @@
       kids.push(links);
     }
     if (related.length) {
-      kids.push(el('div', { class: 'section-title', text: '알려진 오류' }));
+      kids.push(el('div', { class: 'section-title', text: '확인 중인 내용' }));
       related.forEach((n) => kids.push(noticeItem(n)));
     }
     kids.push(el('p', { class: 'footnote', text: '국경과 연도는 Cliopatria 데이터를 바탕으로 한 근사치예요. 근대 이전 국경은 학설에 따라 다를 수 있어요.' }));
@@ -488,8 +497,20 @@
     return el('div', { class: 'notice-item' }, [
       el('h3', { text: `${fmtYear(n.from)} ~ ${fmtYear(n.to)}` }),
       el('p', { text: n.problem }),
-      el('p', { class: 'fix', text: `고칠 내용: ${n.fix}` }),
+      el('p', { class: 'fix', text: `계획: ${n.fix}` }),
     ]);
+  }
+  function openIsland(name) {
+    const info = ISLAND_INFO[name];
+    if (!info) return;
+    state.panelMode = 'island';
+    state.selected = null;
+    applyYearFilters();
+    $('panel-title').textContent = name;
+    $('panel-sub').textContent = info.en;
+    $('panel-body').replaceChildren(el('p', { class: 'note', text: info.text }));
+    $('panel').hidden = false;
+    document.body.classList.add('panel-open');
   }
   function openNoticePanel() {
     state.panelMode = 'notices';
@@ -501,7 +522,7 @@
   }
   function renderNoticePanel() {
     const list = activeNotices();
-    $('panel-title').textContent = '알려진 오류';
+    $('panel-title').textContent = '조사 중인 내용';
     $('panel-sub').textContent = `${fmtYear(state.year)}, 지금 화면 기준`;
     const body = $('panel-body');
     if (!list.length) {
@@ -509,7 +530,7 @@
       return;
     }
     body.replaceChildren(
-      el('p', { class: 'status-line', text: '원본 데이터(Cliopatria)를 교과서·우리역사넷 기준으로 검토하다가 찾은 문제예요. 3단계에서 고칠 예정이에요.' }),
+      el('p', { class: 'status-line', text: '원본 데이터(Cliopatria)를 교과서·한국사 자료 기준으로 검토하면서 아직 고치지 못한 부분이에요.' }),
       ...list.map(noticeItem),
     );
   }
@@ -799,10 +820,13 @@
       map.on('movestart', () => { tip.hidden = true; });
     }
     map.on('click', (e) => {
+      const near = [[e.point.x - 8, e.point.y - 8], [e.point.x + 8, e.point.y + 8]];
+      const isl = map.getLayer('islands-dot') ? map.queryRenderedFeatures(near, { layers: ['islands-dot'] }) : [];
+      if (isl.length) { openIsland(isl[0].properties.n); return; }
       const feats = map.queryRenderedFeatures(e.point, { layers: ['polity-fill'] });
       const f = smallest(feats);
       if (f) openPolity(f.properties.p);
-      else if (state.panelMode === 'polity') closePanel();
+      else if (state.panelMode === 'polity' || state.panelMode === 'island') closePanel();
     });
     map.on('moveend', () => { scheduleOnscreen(); scheduleHash(); renderNotice(); });
     map.on('idle', () => { if (needOnscreen) { needOnscreen = false; updateOnscreen(); } });

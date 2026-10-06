@@ -52,13 +52,20 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--region", default="east_asia", choices=REGIONS)
     ap.add_argument("--years", type=int, nargs="+", required=True)
+    ap.add_argument("--source", default=str(RAW), help="원본 geojson 또는 수정 적용된 parquet (data/build/patched.parquet)")
+    ap.add_argument("--title", default="")
     args = ap.parse_args()
 
     pick_font()
     ko = yaml.safe_load((ROOT / "data" / "names_ko.yaml").read_text(encoding="utf-8")) or {}
     win = box(*REGIONS[args.region])
-    gdf = gpd.read_file(RAW)
-    gdf = gdf[(gdf.Type == "POLITY") & gdf.intersects(win)]
+    src = pathlib.Path(args.source)
+    gdf = gpd.read_parquet(src) if src.suffix == ".parquet" else gpd.read_file(src)
+    if "Type" in gdf.columns:
+        gdf = gdf[gdf.Type == "POLITY"]
+    if "FromYear" in gdf.columns:
+        gdf = gdf.rename(columns={"FromYear": "f", "ToYear": "t"})
+    gdf = gdf[~gdf.Name.str.startswith("(") & gdf.intersects(win)]
 
     n = len(args.years)
     cols = min(4, n)
@@ -67,7 +74,7 @@ def main() -> None:
     for ax in axes.flat[n:]:
         ax.axis("off")
     for ax, y in zip(axes.flat, args.years):
-        sub = gdf[(gdf.FromYear <= y) & (gdf.ToYear >= y)].copy()
+        sub = gdf[(gdf.f <= y) & (gdf.t >= y)].copy()
         sub["geometry"] = sub.geometry.intersection(win)
         sub = sub[~sub.geometry.is_empty]
         for _, r in sub.iterrows():
@@ -85,8 +92,11 @@ def main() -> None:
         ax.set_xlabel("")
         ax.set_ylabel("")
         ax.set_title(label_year(y), fontsize=10, loc="left")
+    if args.title:
+        fig.suptitle(args.title, fontsize=14, x=0.01, ha="left")
     plt.tight_layout()
-    out = ROOT / "docs" / "review" / f"{args.region}_{args.years[0]}-{args.years[-1]}.png"
+    tag = "_patched" if src.suffix == ".parquet" else ""
+    out = ROOT / "docs" / "review" / f"{args.region}_{args.years[0]}-{args.years[-1]}{tag}.png"
     out.parent.mkdir(parents=True, exist_ok=True)
     plt.savefig(out)
     print(f"저장: {out}")

@@ -249,6 +249,10 @@ button { cursor: pointer; }
 .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
 .tag { font-size: 12px; padding: 3px 8px; border-radius: 6px; background: var(--hover); color: var(--muted); }
 .tag.is-warn { background: var(--warn-bg); color: var(--warn-ink); }
+.tag.is-ok { background: rgba(46, 125, 90, 0.12); color: #2e6b4f; }
+:root[data-theme="dark"] .tag.is-ok { color: #9fd6b8; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .tag.is-ok { color: #9fd6b8; } }
+.note { margin: 0; font-size: 14px; line-height: 1.65; color: var(--ink); }
 
 .span-years { font-family: var(--font-display); font-weight: 700; font-size: 19px; }
 .lifespan { position: relative; height: 34px; margin: 10px 0 4px; }

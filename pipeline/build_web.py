@@ -13,6 +13,7 @@
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import math
 import pathlib
@@ -27,6 +28,9 @@ import shapely
 import yaml
 from shapely import STRtree
 from shapely.ops import polylabel
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+import patches  # noqa: E402
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 RAW = ROOT / "data" / "raw"
@@ -114,12 +118,12 @@ def assign_colors(gdf: gpd.GeoDataFrame, name_index: dict[str, int]) -> dict[int
     t = base.t.values
     p = base.p.values
     for a, geom in enumerate(geoms):
-        for b in tree.query(shapely.buffer(shapely.envelope(geom), 0.15)):
+        for b in tree.query(shapely.buffer(shapely.envelope(geom), 0.8)):
             if b <= a or p[a] == p[b] or p[b] in edges[p[a]]:
                 continue
             if not (f[a] <= t[b] and f[b] <= t[a]):
                 continue
-            if shapely.dwithin(geom, geoms[b], 0.15):
+            if shapely.dwithin(geom, geoms[b], 0.8):  # 좁은 바다 건너 이웃도 다른 색으로
                 edges[p[a]].add(p[b])
                 edges[p[b]].add(p[a])
     order = sorted(set(p), key=lambda k: -len(edges[k]))
@@ -159,8 +163,10 @@ def make_chunks(f, t) -> list[tuple[int, int]]:
 def load_notices():
     out = []
     for path in sorted((ROOT / "data" / "patches").glob("*.yaml")):
+        if path.name.endswith("_ops.yaml"):
+            continue
         for item in yaml.safe_load(path.read_text(encoding="utf-8")) or []:
-            if "years" not in item:
+            if "years" not in item or str(item.get("status", "")).startswith("적용"):
                 continue
             out.append({
                 "id": item["id"],
@@ -189,9 +195,9 @@ def build_base(tmp: pathlib.Path) -> None:
               "-o", "format=topojson", "quantization=100000", str(OUT / "base.json"))
 
 
-def prepare_geometry(out_path: pathlib.Path) -> None:
-    """1~4단계: 원본 읽기, 해안선 자르기, 라벨 위치, 단순화. 결과를 캐시 파일로 저장."""
-    log("1/7 원본 읽는 중")
+def prepare_clipped(out_path: pathlib.Path) -> None:
+    """1~2단계: 원본 읽기, 해안선 자르기. 결과를 캐시(parquet)로 저장."""
+    log("1/8 원본 읽는 중")
     raw = gpd.read_file(RAW / "cliopatria.geojson")
     gdf = raw[raw.Type == "POLITY"].reset_index(drop=True).copy()
     del raw
@@ -204,23 +210,52 @@ def prepare_geometry(out_path: pathlib.Path) -> None:
     gdf = gdf.rename(columns={"FromYear": "f", "ToYear": "t"})
     gdf["f"] = gdf.f.astype(int)
     gdf["t"] = gdf.t.astype(int)
+    log("2/8 해안선으로 자르는 중 (1분 정도)")
+    gdf["geometry"] = clip_to_land(gdf)
+    gdf.to_parquet(out_path)
+
+
+def patch_files() -> list[pathlib.Path]:
+    return sorted((ROOT / "data" / "patches").glob("*_ops.yaml"))
+
+
+def prepare_geometry(out_path: pathlib.Path) -> None:
+    """3~5단계: 역사 수정 적용, 라벨 위치, 단순화."""
+    clipped = BUILD / "clipped.parquet"
+    if not clipped.exists():
+        prepare_clipped(clipped)
+    gdf = gpd.read_parquet(clipped)
+    gdf["patch"] = ""
+
+    log("3/8 역사 수정 적용 중 (data/patches)")
+    countries = gpd.read_file(RAW / "ne_50m_admin_0_countries.geojson")
+    for path in patch_files():
+        log(f"   {path.name}")
+        gdf = patches.apply_ops(gdf, path, countries, log=log)
+    gdf = patches.recompute_area(gdf)
+    gdf = gdf.sort_values(["Name", "f"]).reset_index(drop=True)
     gdf["i"] = range(len(gdf))
 
-    log("2/7 해안선으로 자르는 중 (1분 정도)")
-    gdf["geometry"] = clip_to_land(gdf)
-
-    log("3/7 라벨 위치 계산 중")
+    log("4/8 라벨 위치 계산 중")
     lps = [label_point(g) for g in gdf.geometry.values]
     gdf["lpx"] = [p[0] if p else None for p in lps]
     gdf["lpy"] = [p[1] if p else None for p in lps]
 
-    log("4/7 국경 단순화 중 (mapshaper)")
+    log("5/8 국경 단순화 중 (mapshaper)")
     with tempfile.TemporaryDirectory() as td:
         tmp = pathlib.Path(td)
         gdf.to_file(tmp / "polys.json", driver="GeoJSON")
         del gdf
         mapshaper("-i", str(tmp / "polys.json"), "-simplify", f"interval={SIMPLIFY_INTERVAL_M}", "keep-shapes",
                   "-o", "precision=0.001", str(out_path))
+
+
+def inputs_hash() -> str:
+    h = hashlib.sha256()
+    for path in patch_files() + [pathlib.Path(patches.__file__)]:
+        h.update(path.read_bytes())
+    h.update(str(SIMPLIFY_INTERVAL_M).encode())
+    return h.hexdigest()[:16]
 
 
 # ---------------------------------------------------------------- main
@@ -231,12 +266,15 @@ def main() -> None:
         old.unlink()
 
     simplified = BUILD / "simplified.geojson"
-    if not simplified.exists():
-        prepare_geometry(simplified)
+    stamp = BUILD / "simplified.hash"
+    digest = inputs_hash()
+    if simplified.exists() and stamp.exists() and stamp.read_text() == digest:
+        log("1~5/8 이전에 만든 결과 재사용 (수정 파일이 바뀌면 자동으로 다시 만듦)")
     else:
-        log("1~4/7 이전에 만든 단순화 결과 재사용 (data/build/simplified.geojson 지우면 다시 만듦)")
+        prepare_geometry(simplified)
+        stamp.write_text(digest)
     gdf = gpd.read_file(simplified)
-    for col in ("Wikipedia", "Wikidata", "Components", "MemberOf"):
+    for col in ("Wikipedia", "Wikidata", "Components", "MemberOf", "patch"):
         gdf[col] = gdf[col].fillna("").astype(str)
     gdf = gdf.sort_values("i").reset_index(drop=True)
     gdf["f"] = gdf.f.astype(int)
@@ -249,18 +287,22 @@ def main() -> None:
     with tempfile.TemporaryDirectory() as td:
         build_base(pathlib.Path(td))
 
-    log("5/7 색 배정 중")
+    log("6/8 색 배정 중")
     color = assign_colors(gdf, name_index)
 
-    log("6/7 이름·메타데이터 정리 중")
+    log("7/8 이름·메타데이터 정리 중")
     manual, wd = load_names()
+    notes = yaml.safe_load((ROOT / "data" / "notes_ko.yaml").read_text(encoding="utf-8")) or {}
+    wd_fix = {}
+    for path in patch_files():
+        wd_fix.update((yaml.safe_load(path.read_text(encoding="utf-8")) or {}).get("wikidata_fix") or {})
     qid_names = gdf.groupby("Wikidata").Name.nunique().to_dict()
     polities = []
     for n in names:
         rows = gdf[gdf.Name == n]
         best = rows.loc[rows.Area.idxmax()]
-        qid = (best.Wikidata or "").strip()
-        unique_qid = bool(qid) and qid_names.get(qid, 0) == 1
+        qid = wd_fix.get(n, (best.Wikidata or "").strip())
+        unique_qid = bool(qid) and (n in wd_fix or qid_names.get(qid, 0) == 1)
         wdi = wd.get(qid, {}) if unique_qid else {}
         if n in manual:
             ko, src = manual[n], "ko"
@@ -284,9 +326,11 @@ def main() -> None:
             "kowiki": wdi.get("kowiki"),
             "mem": [m for m in members if m],
             "of": [m for m in member_of if m],
+            "note": notes.get(n),
+            "fixed": bool(rows.patch.astype(str).str.len().gt(0).any()),
         })
 
-    log("7/7 시대별 청크 만드는 중")
+    log("8/8 시대별 청크 만드는 중")
     chunks = make_chunks(gdf.f.tolist(), gdf.t.tolist())
     chunk_meta = []
     with tempfile.TemporaryDirectory() as td:
