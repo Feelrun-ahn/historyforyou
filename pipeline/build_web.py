@@ -31,6 +31,7 @@ from shapely.ops import polylabel
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import patches  # noqa: E402
+import topo_fix  # noqa: E402
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 RAW = ROOT / "data" / "raw"
@@ -226,6 +227,7 @@ def prepare_geometry(out_path: pathlib.Path) -> None:
         prepare_clipped(clipped)
     gdf = gpd.read_parquet(clipped)
     gdf["patch"] = ""
+    gdf["u"] = 0
 
     log("3/8 역사 수정 적용 중 (data/patches)")
     countries = gpd.read_file(RAW / "ne_50m_admin_0_countries.geojson")
@@ -248,6 +250,37 @@ def prepare_geometry(out_path: pathlib.Path) -> None:
         del gdf
         mapshaper("-i", str(tmp / "polys.json"), "-simplify", f"interval={SIMPLIFY_INTERVAL_M}", "keep-shapes",
                   "-o", "precision=0.001", str(out_path))
+
+
+def reapply_islands(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
+    """단순화 과정에서 아주 작은 섬(독도 등)이 사라지지 않게, islands 작업의 섬 모양을 다시 붙임."""
+    countries = gpd.read_file(RAW / "ne_50m_admin_0_countries.geojson")
+    for path in patch_files():
+        doc = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        ops = [op for op in doc.get("ops", []) if op.get("op") == "islands"]
+        if not ops:
+            continue
+        regions = patches.build_regions(doc.get("regions"), countries)
+        for op in ops:
+            shape = shapely.union_all([patches._geom(s, regions) for s in op["shapes"]])
+            for item in op["owners"]:
+                a, b = item["years"]
+                m = (gdf.Name == item["name"]) & (gdf.f <= b) & (gdf.t >= a)
+                gdf.loc[m, "geometry"] = [shapely.union(shapely.make_valid(g), shape) for g in gdf.loc[m, "geometry"]]
+    return gdf
+
+
+def polygonal(geom):
+    """GeometryCollection 등에서 면(Polygon) 부분만 꺼냄."""
+    if geom is None or geom.is_empty:
+        return geom
+    if geom.geom_type in ("Polygon", "MultiPolygon"):
+        return geom
+    parts = [g for g in getattr(geom, "geoms", []) if g.geom_type in ("Polygon", "MultiPolygon")]
+    polys = []
+    for g in parts:
+        polys.extend(g.geoms if g.geom_type == "MultiPolygon" else [g])
+    return shapely.MultiPolygon(polys) if polys else shapely.Polygon()
 
 
 def inputs_hash() -> str:
@@ -277,9 +310,13 @@ def main() -> None:
     for col in ("Wikipedia", "Wikidata", "Components", "MemberOf", "patch"):
         gdf[col] = gdf[col].fillna("").astype(str)
     gdf = gdf.sort_values("i").reset_index(drop=True)
+    gdf = reapply_islands(gdf)
+    # 고치기 작업(union·make_valid)에서 생긴 선·점 조각은 버리고 면만 남김
+    gdf["geometry"] = [polygonal(g) for g in gdf.geometry]
     gdf["f"] = gdf.f.astype(int)
     gdf["t"] = gdf.t.astype(int)
     gdf["super"] = gdf.Name.str.startswith("(")
+    gdf["u"] = gdf["u"].fillna(0).astype(int) if "u" in gdf.columns else 0
     gdf["lp"] = [(x, y) if x == x and y == y else None for x, y in zip(gdf.lpx, gdf.lpy)]
     names = sorted(gdf.Name.unique())
     name_index = {n: i for i, n in enumerate(names)}
@@ -340,20 +377,27 @@ def main() -> None:
             polys = gpd.GeoDataFrame({
                 "i": sel.index.values, "p": sel.p.values, "f": sel.f.values, "t": sel.t.values,
                 "a": sel.Area.round().astype(int).values, "c": [color[k] for k in sel.p.values],
-                "g": sel.super.astype(int).values,
+                "g": sel.super.astype(int).values, "u": sel.u.astype(int).values,
             }, geometry=sel.geometry.values, crs="EPSG:4326")
-            pts_rows = [(r.Index, r.p, r.f, r.t, int(round(r.Area)), r.lp) for r in sel.itertuples() if r.lp]
+            pts_rows = [(r.Index, r.p, r.f, r.t, int(round(r.Area)), r.lp, int(r.u)) for r in sel.itertuples() if r.lp]
             pts = gpd.GeoDataFrame({
                 "i": [r[0] for r in pts_rows], "p": [r[1] for r in pts_rows], "f": [r[2] for r in pts_rows],
                 "t": [r[3] for r in pts_rows], "a": [r[4] for r in pts_rows],
                 "k": [polities[r[1]]["ko"] for r in pts_rows],
                 "g": [polities[r[1]]["g"] for r in pts_rows],
+                "u": [r[6] for r in pts_rows],
             }, geometry=gpd.points_from_xy([r[5][0] for r in pts_rows], [r[5][1] for r in pts_rows]), crs="EPSG:4326")
             polys.to_file(tmp / "polities.json", driver="GeoJSON")
             pts.to_file(tmp / "labels.json", driver="GeoJSON")
             fname = f"c{ci:02d}.json"
             mapshaper("-i", str(tmp / "polities.json"), str(tmp / "labels.json"), "combine-files",
                       "-o", "format=topojson", "quantization=200000", str(OUT / fname))
+            # 면·선이 섞이면 mapshaper 가 레이어를 polities1/2 로 나눠서 앱이 그 시대를 통째로 못 그림 → 하나로 합치기
+            if topo_fix.normalize_file(OUT / fname):
+                log(f"   청크 {ci:02d}: 나뉜 레이어를 'polities' 하나로 합침")
+            problems = topo_fix.check_topology(json.loads((OUT / fname).read_text(encoding="utf-8")))
+            if problems:
+                raise SystemExit(f"청크 {fname} 이상: {problems}")
             size = (OUT / fname).stat().st_size
             chunk_meta.append({"id": ci, "from": int(a), "to": int(b), "file": fname, "rows": int(len(sel)), "bytes": size})
             log(f"   청크 {ci:02d}: {a}~{b}년, {len(sel)}개, {size/1e6:.2f}MB")
@@ -375,6 +419,14 @@ def main() -> None:
     for p in polities:
         ko_src[p["src"]] += 1
     log(f"   이름 출처: {dict(ko_src)}")
+    import build_wars  # noqa: E402  (전쟁 데이터는 나라 번호가 필요해서 마지막에 만듦)
+    build_wars.main()
+    import build_events  # noqa: E402
+    build_events.main()
+    import build_korea_extra  # noqa: E402
+    build_korea_extra.main()
+    import build_korea_map  # noqa: E402  (한국사 지도 화면: 행정 구역·교과서 지도·통치 체제·용어·한양·붕당)
+    build_korea_map.main()
 
 
 if __name__ == "__main__":

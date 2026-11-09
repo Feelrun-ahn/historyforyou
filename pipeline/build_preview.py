@@ -36,6 +36,7 @@ def main() -> None:
         raw = path.read_bytes()
         embed[path.name] = base64.b64encode(gzip.compress(raw, compresslevel=9, mtime=0)).decode("ascii")
 
+    html = block("PWA", html, "")  # 미리보기 한 파일에는 앱 설치 기능을 넣지 않음
     html = block("MAPLIBRE_CSS", html, "<style>" + (WEB / "vendor" / "maplibre-gl.css").read_text(encoding="utf-8") + "</style>")
     html = block("APP_CSS", html, "<style>" + (WEB / "style.css").read_text(encoding="utf-8") + "</style>")
     html = block("TOPOJSON_JS", html, "<script>" + (WEB / "vendor" / "topojson-client.min.js").read_text(encoding="utf-8") + "</script>")

@@ -1,0 +1,248 @@
+# 세계사 주요 전쟁 (직접 정리, 검수 전)
+# 기준: 고등학교 세계사 교과서 수준의 통설. 날짜는 양력(그레고리력, 고대는 율리우스력 관례)
+# 형식은 korea.yaml 과 같아요. region: world, cal: solar
+# sides[0] 은 빨강, sides[1] 은 파랑으로 표시돼요 (어느 쪽이 '좋은 편'이라는 뜻은 아니에요)
+
+- id: greco-persian
+  name: 페르시아 전쟁
+  en: Greco-Persian Wars
+  region: world
+  cal: solar
+  years: [-499, -449]
+  period: 기원전 499년 ~ 기원전 449년
+  sides:
+    - {label: 그리스 도시국가, polities: [Greek City-States]}
+    - {label: 페르시아(아케메네스 왕조), polities: [Achaemenid Empire]}
+  cause: 소아시아 이오니아 지방의 그리스 도시들이 페르시아에 맞서 반란을 일으키자(기원전 499년), 반란을 도운 아테네 등을 응징하려고 페르시아가 그리스를 침공했어요.
+  result: 그리스 도시국가들이 페르시아의 침공을 막아 냈어요. 이후 아테네가 델로스 동맹을 이끌며 전성기를 맞았어요.
+  battles:
+    - {name: 마라톤 전투, date: 기원전 490년, year: -490, at: [23.97, 38.12], winner: 0, imp: 3,
+       note: '아테네군이 마라톤 평원에서 페르시아군을 물리쳤어요.'}
+    - {name: 테르모필레 전투, date: 기원전 480년, year: -480, at: [22.54, 38.8], winner: 1, imp: 2,
+       note: '스파르타의 레오니다스 왕은 그리스군 대부분을 돌려보내고, 스파르타군 300명 등 남은 병사들과 함께 좁은 길목에서 페르시아 대군을 막다가 전멸했어요.'}
+    - {name: 살라미스 해전, date: 기원전 480년, year: -480, at: [23.57, 37.95], winner: 0, imp: 3,
+       note: '테미스토클레스가 이끈 그리스 함대가 살라미스 해협에서 페르시아 함대를 크게 무찔렀어요.'}
+    - {name: 플라타이아이 전투, date: 기원전 479년, year: -479, at: [23.27, 38.21], winner: 0, imp: 2,
+       note: '그리스 연합군이 페르시아 육군을 물리쳐 페르시아의 그리스 침공이 끝났어요.'}
+
+- id: alexander
+  name: 알렉산드로스의 동방 원정
+  en: Wars of Alexander the Great
+  region: world
+  cal: solar
+  years: [-334, -323]
+  period: 기원전 334년 ~ 기원전 323년
+  sides:
+    - {label: 마케도니아(알렉산드로스), polities: [Macedonian Empire]}
+    - {label: 페르시아(아케메네스 왕조), polities: [Achaemenid Empire]}
+  cause: 그리스를 장악한 마케도니아의 알렉산드로스가 페르시아를 정복하겠다며 동쪽으로 원정을 떠났어요.
+  result: 아케메네스 왕조 페르시아가 무너지고 그리스에서 인도 서북부에 이르는 대제국이 세워졌어요. 그리스 문화와 동방 문화가 어우러진 헬레니즘 문화가 퍼졌어요. 알렉산드로스가 기원전 323년 바빌론에서 죽은 뒤 제국은 여러 나라로 나뉘었어요.
+  battles:
+    - {name: 그라니코스 강 전투, date: 기원전 334년, year: -334, at: [27.3, 40.25], winner: 0, imp: 2, approx: true,
+       note: '소아시아에 건너간 알렉산드로스가 처음으로 페르시아군을 물리쳤어요.'}
+    - {name: 이소스 전투, date: 기원전 333년, year: -333, at: [36.2, 36.84], winner: 0, imp: 3, approx: true,
+       note: '페르시아 왕 다리우스 3세가 이끄는 대군을 물리쳤어요.'}
+    - {name: 가우가멜라 전투, date: 기원전 331년, year: -331, at: [43.45, 36.57], winner: 0, imp: 3, approx: true,
+       note: '다리우스 3세를 다시 물리쳐 페르시아의 운명을 결정지었어요.'}
+    - {name: 페르세폴리스 점령, date: 기원전 330년, year: -330, at: [52.89, 29.93], winner: 0, imp: 2, event: true,
+       note: '페르시아의 수도 가운데 하나인 페르세폴리스를 차지하고 궁전을 불태웠어요.'}
+    - {name: 히다스페스 강 전투, date: 기원전 326년, year: -326, at: [73.5, 32.95], winner: 0, imp: 2, approx: true,
+       note: '인도 서북부에서 포로스 왕의 군대를 물리쳤어요. 이후 더 동쪽의 히파시스강(지금의 베아스강)에서 지친 병사들이 더 나아가길 거부해 되돌아갔어요.'}
+    - {name: 알렉산드로스의 죽음, date: 기원전 323년, year: -323, at: [44.42, 32.54], winner: null, imp: 2, event: true,
+       note: '알렉산드로스가 바빌론에서 32살의 나이로 죽었어요.'}
+
+- id: punic-2
+  name: 제2차 포에니 전쟁
+  en: Second Punic War
+  region: world
+  cal: solar
+  years: [-218, -201]
+  period: 기원전 218년 ~ 기원전 201년
+  sides:
+    - {label: 로마, polities: [Roman Republic]}
+    - {label: 카르타고(한니발), polities: [Carthage]}
+  cause: 지중해 서쪽의 패권을 두고 로마와 카르타고가 다시 맞붙었어요. 카르타고의 한니발이 히스파니아의 사군툼을 공격한 것이 계기가 됐어요.
+  result: 로마가 이기고 카르타고는 해외 영토를 잃었어요. 로마는 지중해 서쪽의 강자가 됐고, 기원전 146년 제3차 포에니 전쟁으로 카르타고를 멸망시켰어요.
+  battles:
+    - {name: 트레비아 강 전투, date: 기원전 218년 12월, year: -218, at: [9.6, 45.0], winner: 1, imp: 2, approx: true,
+       note: '알프스를 넘어온 한니발이 북이탈리아에서 로마군을 물리쳤어요.'}
+    - {name: 트라시메노 호수 전투, date: 기원전 217년 6월, year: -217, at: [12.1, 43.18], winner: 1, imp: 2,
+       note: '한니발이 호숫가에 매복해 로마군을 크게 무찔렀어요.'}
+    - {name: 칸나에 전투, date: 기원전 216년 8월, year: -216, at: [16.13, 41.31], winner: 1, imp: 3,
+       note: '한니발이 로마의 대군을 포위해 무찔렀어요. 포위 섬멸 전술의 대표적인 예로 꼽혀요.'}
+    - {name: 자마 전투, date: 기원전 202년, year: -202, at: [9.4, 36.2], winner: 0, imp: 3, approx: true,
+       note: '로마의 스키피오가 북아프리카에서 한니발을 물리쳐 전쟁을 끝냈어요. 정확한 위치는 확실하지 않아요.'}
+
+- id: mongol-conquests
+  name: 몽골의 정복 전쟁
+  en: Mongol conquests
+  region: world
+  cal: solar
+  years: [1206, 1279]
+  period: 1206년 ~ 1279년
+  sides:
+    - {label: 몽골 제국, polities: [Mongol Empire]}
+    - {label: 몽골에 맞선 나라들, polities: [Western Xia, Great Jin, Khwarezmid Empire, "Kievan Rus'", Kingdom of Hungary, Abbasid Caliphate, Southern Song, Mamluk Sultanate]}
+  cause: 1206년 칭기즈 칸이 몽골 부족을 통일한 뒤, 몽골은 뛰어난 기병을 앞세워 사방으로 정복에 나섰어요.
+  result: 동아시아에서 동유럽까지 이르는 역사상 가장 넓은 육상 제국이 세워졌어요. 동서 교류가 활발해졌지만 많은 도시가 파괴됐어요. 제국은 원과 여러 칸국으로 나뉘었어요. (고려 침입은 '몽골의 침입'에서 따로 볼 수 있어요.)
+  battles:
+    - {name: 중도 함락, date: 1215년, year: 1215, at: [116.4, 39.9], winner: 0, imp: 2,
+       note: '금의 수도 중도(지금의 베이징)를 함락했어요.'}
+    - {name: 사마르칸트 함락, date: 1220년, year: 1220, at: [66.97, 39.65], winner: 0, imp: 2,
+       note: '호라즘 원정 중 중앙아시아의 큰 도시 사마르칸트를 함락했어요.'}
+    - {name: 서하 멸망, date: 1227년, year: 1227, at: [106.27, 38.47], winner: 0, imp: 2, event: true,
+       note: '서하를 멸망시켰어요. 같은 해 칭기즈 칸이 죽었어요.'}
+    - {name: 금 멸망, date: 1234년, year: 1234, at: [114.36, 32.98], winner: 0, imp: 2, approx: true,
+       note: '몽골과 남송의 공격으로 금이 멸망했어요.'}
+    - {name: 키예프(지금의 키이우) 함락, date: 1240년, year: 1240, at: [30.52, 50.45], winner: 0, imp: 2,
+       note: '바투가 이끈 몽골군이 키예프를 함락했어요.'}
+    - {name: 레그니차 전투, date: 1241년, year: 1241, at: [16.16, 51.2], winner: 0, imp: 2,
+       note: '헨리크 2세가 이끈 폴란드 등 유럽 연합군을 물리쳤어요.'}
+    - {name: 모히 전투, date: 1241년, year: 1241, at: [20.9, 47.95], winner: 0, imp: 2, approx: true,
+       note: '헝가리 왕국의 군대를 크게 무찔렀어요.'}
+    - {name: 바그다드 함락, date: 1258년, year: 1258, at: [44.4, 33.3], winner: 0, imp: 3,
+       note: '훌라구가 바그다드를 함락해 아바스 왕조가 무너졌어요.'}
+    - {name: 아인 잘루트 전투, date: 1260년, year: 1260, at: [35.36, 32.55], winner: 1, imp: 3, approx: true,
+       note: '이집트의 맘루크 왕조가 몽골군을 물리쳐 몽골의 서쪽 진출을 막았어요.'}
+    - {name: 애산 전투, date: 1279년, year: 1279, at: [113.07, 22.07], winner: 0, imp: 2, approx: true,
+       note: '쿠빌라이의 원이 남송의 마지막 세력을 무찔러 남송이 멸망했어요.'}
+
+- id: hundred-years
+  name: 백년 전쟁
+  en: Hundred Years' War
+  region: world
+  cal: solar
+  years: [1337, 1453]
+  period: 1337년 ~ 1453년
+  sides:
+    - {label: 잉글랜드, polities: [Kingdom of England]}
+    - {label: 프랑스, polities: [Kingdom of France]}
+  cause: 프랑스 왕위 계승 문제와, 모직물 공업 지대인 플랑드르와 포도주 산지 가스코뉴를 둘러싼 이해관계로 잉글랜드와 프랑스가 오랫동안 싸웠어요.
+  result: 프랑스가 이겨 잉글랜드는 칼레를 빼고 대륙의 영토를 거의 잃었어요. 전쟁을 거치며 두 나라 모두 왕권이 강해지고 국민 의식이 자랐어요.
+  battles:
+    - {name: 크레시 전투, date: 1346년, year: 1346, at: [1.93, 50.25], winner: 0, imp: 2,
+       note: '잉글랜드의 장궁병이 프랑스 기사들을 크게 무찔렀어요.'}
+    - {name: 푸아티에 전투, date: 1356년, year: 1356, at: [0.38, 46.6], winner: 0, imp: 2, approx: true,
+       note: '잉글랜드의 흑태자가 프랑스 왕 장 2세를 사로잡았어요.'}
+    - {name: 아쟁쿠르 전투, date: 1415년, year: 1415, at: [2.14, 50.46], winner: 0, imp: 3,
+       note: '헨리 5세가 이끈 잉글랜드군이 수가 훨씬 많은 프랑스군을 물리쳤어요.'}
+    - {name: 오를레앙 포위 해제, date: 1429년, year: 1429, at: [1.91, 47.9], winner: 1, imp: 3,
+       note: '잔 다르크가 앞장선 프랑스군이 오를레앙을 구해 내 전세가 바뀌었어요.'}
+    - {name: 카스티용 전투, date: 1453년, year: 1453, at: [-0.04, 44.85], winner: 1, imp: 2,
+       note: '프랑스가 이겨 백년 전쟁이 끝났어요.'}
+
+- id: thirty-years
+  name: 30년 전쟁
+  en: Thirty Years' War
+  region: world
+  cal: solar
+  years: [1618, 1648]
+  period: 1618년 ~ 1648년
+  sides:
+    - {label: 합스부르크 쪽 (신성 로마 황제·스페인), polities: [Holy Roman Empire, Habsburg Monarchy, Spanish Empire]}
+    - {label: 반합스부르크 쪽 (스웨덴·프랑스 등), polities: [Swedish Empire, Kingdom of France, Dutch Republic]}
+  cause: 신성 로마 제국 안의 가톨릭과 개신교의 갈등에서 시작해(1618년 보헤미아 반란), 유럽 여러 나라가 끼어든 국제 전쟁으로 커졌어요.
+  result: 1648년 베스트팔렌 조약으로 끝났어요. 칼뱅파도 인정되고 네덜란드와 스위스의 독립이 인정됐어요. 신성 로마 제국은 크게 약해졌고, 이 조약은 주권 국가 체제의 출발점으로 여겨져요.
+  battles:
+    - {name: 빌라호라 전투, date: 1620년, year: 1620, at: [14.32, 50.08], winner: 0, imp: 2,
+       note: '황제군이 보헤미아의 개신교 세력을 물리쳤어요.'}
+    - {name: 브라이텐펠트 전투, date: 1631년, year: 1631, at: [12.42, 51.41], winner: 1, imp: 2,
+       note: '스웨덴 왕 구스타브 2세 아돌프가 황제군을 크게 무찔렀어요.'}
+    - {name: 뤼첸 전투, date: 1632년, year: 1632, at: [12.14, 51.24], winner: 1, imp: 2,
+       note: '스웨덴군이 이겼지만 구스타브 2세 아돌프가 전사했어요.'}
+    - {name: 뇌르틀링겐 전투, date: 1634년, year: 1634, at: [10.49, 48.85], winner: 0, imp: 1,
+       note: '황제군과 스페인군이 스웨덴군을 물리쳤어요. 이후 프랑스가 직접 전쟁에 뛰어들었어요.'}
+    - {name: 로크루아 전투, date: 1643년, year: 1643, at: [4.52, 49.93], winner: 1, imp: 2,
+       note: '프랑스군이 스페인군을 크게 무찔렀어요.'}
+    - {name: 베스트팔렌 조약, date: 1648년, year: 1648, at: [7.63, 51.96], winner: null, imp: 3, event: true,
+       note: '뮌스터와 오스나브뤼크에서 맺은 평화 조약으로 전쟁이 끝났어요.'}
+
+- id: napoleonic
+  name: 나폴레옹 전쟁
+  en: Napoleonic Wars
+  region: world
+  cal: solar
+  years: [1803, 1815]
+  period: 1803년 ~ 1815년
+  sides:
+    - {label: 프랑스(나폴레옹), polities: [French Consulate, First French Empire]}
+    - {label: 대프랑스 동맹, polities: [Kingdom of Great Britain, Habsburg Monarchy, Austrian Empire, Russian Empire, Kingdom of Prussia]}
+  cause: 프랑스 혁명 뒤 권력을 잡은 나폴레옹이 유럽 정복에 나서자, 영국·오스트리아·러시아·프로이센 등이 여러 차례 동맹을 맺어 맞섰어요.
+  result: 나폴레옹이 1814년 물러났다가 돌아왔지만 1815년 워털루에서 져서 완전히 물러났어요. 빈 회의로 유럽의 국경이 다시 정해졌고, 혁명이 퍼뜨린 자유·평등 이념과 민족주의가 유럽 곳곳에 퍼졌어요.
+  battles:
+    - {name: 트라팔가르 해전, date: 1805년 10월 21일, year: 1805, at: [-6.04, 36.18], winner: 1, imp: 3,
+       note: '넬슨이 이끈 영국 함대가 프랑스·스페인 연합 함대를 무찔렀어요. 영국이 바다를 장악하면서 나폴레옹은 다시는 영국 본토를 침공하려 하지 못했어요.'}
+    - {name: 아우스터리츠 전투, date: 1805년 12월 2일, year: 1805, at: [16.76, 49.13], winner: 0, imp: 3,
+       note: '나폴레옹이 오스트리아·러시아 연합군을 크게 무찔렀어요.'}
+    - {name: 예나 전투, date: 1806년 10월 14일, year: 1806, at: [11.58, 50.93], winner: 0, imp: 2,
+       note: '프로이센군을 물리치고 베를린에 들어갔어요.'}
+    - {name: 대륙 봉쇄령, date: 1806년 11월, year: 1806, at: [13.4, 52.52], winner: null, imp: 2, event: true,
+       note: '나폴레옹이 베를린에서 영국과의 무역을 막는 명령을 내렸어요.'}
+    - {name: 보로디노 전투, date: 1812년 9월 7일, year: 1812, at: [35.82, 55.52], winner: null, imp: 3,
+       note: '러시아 원정 중 가장 큰 전투예요. 프랑스군이 모스크바로 가는 길을 열었지만 러시아군을 무너뜨리지는 못했어요.'}
+    - {name: 모스크바 입성, date: 1812년 9월 14일, year: 1812, at: [37.62, 55.75], winner: null, imp: 2, event: true,
+       note: '나폴레옹이 모스크바에 들어갔지만 도시는 불타고 있었고, 러시아는 항복하지 않았어요.'}
+    - {name: 라이프치히 전투, date: 1813년 10월 16일 ~ 19일, year: 1813, at: [12.37, 51.34], winner: 1, imp: 3,
+       note: '여러 나라 군대가 모여 싸워 ''국가들의 전투''라고도 불러요. 나폴레옹이 크게 졌어요.'}
+    - {name: 워털루 전투, date: 1815년 6월 18일, year: 1815, at: [4.41, 50.68], winner: 1, imp: 3,
+       note: '영국·프로이센 연합군에 져서 나폴레옹의 시대가 끝났어요.'}
+
+- id: ww1
+  name: 제1차 세계 대전
+  en: World War I
+  region: world
+  cal: solar
+  years: [1914, 1918]
+  period: 1914년 7월 ~ 1918년 11월
+  sides:
+    - {label: 연합국, polities: [French Third Republic, Kingdom of Great Britain, Russian Empire, Russian Republic, Kingdom of Italy, Empire of Japan, United States of America]}
+    - {label: 동맹국, polities: [German Empire, Austria-Hungary, Ottoman Empire, Kingdom of Bulgaria]}
+  cause: 1914년 6월 사라예보에서 오스트리아-헝가리의 황태자 부부가 암살된 사건을 계기로, 3국 동맹과 3국 협상으로 얽혀 있던 유럽 강대국들이 잇따라 전쟁에 뛰어들었어요. 그 밑바탕에는 제국주의 경쟁이 있었어요.
+  result: 1918년 11월 11일 휴전으로 연합국이 이겼어요. 독일·오스트리아-헝가리·오스만·러시아 제국이 무너졌고, 베르사유 조약과 국제 연맹이 만들어졌어요. 이탈리아는 1915년, 미국은 1917년에 연합국으로 참전했고, 러시아는 혁명 뒤 1918년 전쟁에서 빠졌어요.
+  battles:
+    - {name: 사라예보 사건, date: 1914년 6월 28일, year: 1914, at: [18.41, 43.86], winner: null, imp: 2, event: true,
+       note: '오스트리아-헝가리의 황태자 부부가 세르비아계 청년에게 암살됐어요.'}
+    - {name: 탄넨베르크 전투, date: 1914년 8월, year: 1914, at: [20.1, 53.5], winner: 1, imp: 2, approx: true,
+       note: '독일군이 동부 전선에서 러시아군을 크게 무찔렀어요.'}
+    - {name: 마른 전투, date: 1914년 9월, year: 1914, at: [3.5, 48.95], winner: 0, imp: 3, approx: true,
+       note: '프랑스·영국군이 파리 가까이까지 온 독일군을 막아 냈어요. 이후 서부 전선은 참호전으로 굳어졌어요.'}
+    - {name: 갈리폴리 전투, date: 1915년 ~ 1916년, year: 1915, at: [26.4, 40.2], winner: 1, imp: 2,
+       note: '연합국이 오스만 제국의 해협을 뚫으려 했지만 실패했어요.'}
+    - {name: 베르됭 전투, date: 1916년 2월 ~ 12월, year: 1916, at: [5.39, 49.16], winner: 0, imp: 3,
+       note: '프랑스군이 독일군의 공격을 막아 냈지만 양쪽 모두 엄청난 사상자를 냈어요.'}
+    - {name: 솜 전투, date: 1916년 7월 ~ 11월, year: 1916, at: [2.7, 50.0], winner: null, imp: 2, approx: true,
+       note: '영국·프랑스군의 공세로 시작됐지만 큰 진전 없이 수많은 사상자만 남겼어요. 처음으로 탱크가 등장했어요.'}
+    - {name: 휴전 협정, date: 1918년 11월 11일, year: 1918, at: [2.9, 49.43], winner: 0, imp: 3, event: true,
+       note: '프랑스 콩피에뉴 숲의 열차 안에서 휴전 협정이 맺어졌어요.'}
+
+- id: ww2
+  name: 제2차 세계 대전
+  en: World War II
+  region: world
+  cal: solar
+  years: [1939, 1945]
+  period: 1939년 9월 ~ 1945년 9월
+  sides:
+    - {label: 연합국, polities: [Kingdom of Great Britain, Union of Soviet Socialist Republics, United States of America, Republic of China, French Third Republic, Free French]}
+    - {label: 추축국, polities: [Nazi Germany, Kingdom of Italy, Empire of Japan]}
+  cause: 독일(나치)·이탈리아·일본이 침략 전쟁으로 세력을 넓혔어요. 1939년 9월 1일 독일이 폴란드를 침공하자 영국과 프랑스가 독일에 선전 포고했어요. 일본은 이미 1937년 중일 전쟁을 일으켰고, 1941년 진주만을 공격해 태평양 전쟁을 일으켰어요.
+  result: 이탈리아는 1943년, 독일은 1945년 5월, 일본은 1945년 8월에 항복해 연합국이 이겼어요. 한국은 광복을 맞았지만 남북으로 나뉘었어요. 국제 연합(UN)이 만들어지고, 미국과 소련을 중심으로 한 냉전이 시작됐어요.
+  battles:
+    - {name: 독일의 폴란드 침공, date: 1939년 9월 1일, year: 1939, at: [19.0, 52.0], winner: 1, imp: 3, event: true,
+       note: '독일이 폴란드를 침공하면서 전쟁이 시작됐어요.'}
+    - {name: 됭케르크 철수, date: 1940년 5월 ~ 6월, year: 1940, at: [2.37, 51.03], winner: null, imp: 2, event: true,
+       note: '독일군에 밀려 프랑스 북부를 내줬지만, 포위된 영국·프랑스군 30만여 명을 배로 무사히 철수시켜 다시 싸울 힘을 지켰어요.'}
+    - {name: 진주만 공습, date: 1941년 12월 7일 (하와이 시각), year: 1941, at: [-157.95, 21.36], winner: 1, imp: 3,
+       note: '일본이 하와이의 미국 해군 기지를 기습해 태평양 전쟁이 시작됐어요.'}
+    - {name: 미드웨이 해전, date: 1942년 6월, year: 1942, at: [-177.37, 28.2], winner: 0, imp: 3,
+       note: '미국 해군이 일본 항공모함 4척을 침몰시켜 태평양 전쟁의 흐름이 바뀌었어요.'}
+    - {name: 스탈린그라드 전투, date: 1942년 8월 ~ 1943년 2월, year: 1942, at: [44.5, 48.7], winner: 0, imp: 3,
+       note: '소련군이 독일군을 포위해 항복시켰어요. 독소 전쟁의 큰 전환점이에요.'}
+    - {name: 노르망디 상륙 작전, date: 1944년 6월 6일, year: 1944, at: [-0.5, 49.35], winner: 0, imp: 3,
+       note: '연합군이 프랑스 북부 해안에 상륙해 서부 전선을 열었어요.'}
+    - {name: 베를린 함락, date: 1945년 4월 ~ 5월, year: 1945, at: [13.4, 52.52], winner: 0, imp: 3,
+       note: '소련군이 베를린을 점령했고, 독일은 5월 8일 항복했어요.'}
+    - {name: 히로시마 원자 폭탄 투하, date: 1945년 8월 6일, year: 1945, at: [132.46, 34.39], winner: 0, imp: 2, event: true,
+       note: '미국이 히로시마에 원자 폭탄을 떨어뜨렸어요. 8월 9일에는 나가사키에도 떨어뜨렸어요.'}
+    - {name: 일본의 항복, date: 1945년 8월 15일, year: 1945, at: [139.69, 35.69], winner: 0, imp: 3, event: true,
+       note: '일본이 항복을 발표했어요. 우리나라는 이날 광복을 맞았어요. 공식 항복 문서 서명은 9월 2일이에요.'}

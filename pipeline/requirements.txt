@@ -2,3 +2,6 @@ geopandas>=1.0
 pyogrio>=0.9
 matplotlib>=3.8
 pyyaml>=6.0
+pyarrow>=15.0
+korean-lunar-calendar>=0.3
+shapely>=2.0

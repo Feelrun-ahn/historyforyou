@@ -8,7 +8,7 @@ regions:
   # 천리장성(1033~1044, 압록강 하구~도련포) 남쪽 — 고려 북쪽 경계의 대략적인 선
   goryeo_north:
     type: polygon
-    coords: [[124.0, 40.3], [124.4, 40.3], [125.0, 40.48], [125.8, 40.42], [126.4, 40.12], [126.95, 39.9], [127.5, 39.78], [127.9, 39.6], [127.9, 38.2], [124.0, 38.2], [124.0, 40.05]]
+    coords: [[124.0, 40.05], [124.35, 40.05], [124.7, 40.15], [125.0, 40.48], [125.8, 40.42], [126.4, 40.12], [126.95, 39.9], [127.5, 39.78], [127.9, 39.6], [127.9, 38.2], [124.0, 38.2], [124.0, 40.05]]
   # 자비령 이북 서북면 (동녕부, 1270~1290) — 대략적인 범위
   dongnyeong:
     type: polygon
@@ -19,10 +19,35 @@ regions:
     coords: [[126.85, 38.95], [127.6, 38.8], [129.3, 39.4], [129.3, 40.75], [127.3, 40.75], [126.85, 39.6], [126.85, 38.95]]
   jeju: {type: bbox, bbox: [125.9, 32.9, 127.2, 33.75]}
   goryeo_north_land: {type: intersect, of: [goryeo_north, korea_land]}
+  # 강동 6주(993 담판, 994~ 축성): 청천강 이북 ~ 압록강 하류 서북쪽만
+  gangdong_p:
+    type: polygon
+    coords: [[124.0, 40.05], [124.35, 40.05], [124.7, 40.15], [125.0, 40.48], [125.8, 40.42], [126.15, 40.05], [126.0, 39.45], [124.0, 39.45], [124.0, 40.05]]
+  gangdong_land: {type: intersect, of: [gangdong_p, korea_land]}
+  # 부여 (기원전 2세기경~494): 쑹화강 중류 지린시 일대 중심, 대략적인 범위 (우리역사넷 『신편 한국사』 4권 참고)
+  buyeo:
+    type: polygon
+    coords: [[124.0, 42.9], [125.5, 42.5], [127.5, 42.6], [128.5, 43.3], [128.5, 44.8], [127.5, 45.5], [125.0, 45.5], [124.0, 44.5], [124.0, 42.9]]
   ssangseong_land: {type: intersect, of: [ssangseong, korea_land]}
   dongnyeong_land: {type: intersect, of: [dongnyeong, korea_land]}
+  baekje_early: {type: intersect, of: [baekje_early_c, korea_land]}
+  baekje_han: {type: intersect, of: [baekje_han_p, korea_land]}
+  silla_early: {type: intersect, of: [silla_early_c, korea_land]}
+  silla_east: {type: intersect, of: [silla_east_p, korea_land]}
+  # 삼국 초기 영역 (D01=A, 『삼국사기』 건국 연도) — 근거가 적어서 '추정 영역'으로 표시
+  baekje_early_c: {type: circle, circle: [127.12, 37.52, 0.32]}       # 한성(위례성) 주변
+  baekje_han_p:                                                        # 고이왕 이후 한강 유역
+    type: polygon
+    coords: [[126.55, 37.0], [127.7, 36.95], [127.95, 37.4], [127.8, 38.0], [126.9, 38.05], [126.55, 37.6], [126.55, 37.0]]
+  silla_early_c: {type: circle, circle: [129.21, 35.84, 0.28]}        # 사로국(경주) 주변
+  silla_east_p:                                                        # 2~4세기 진한 소국 병합 지역 (경주·포항·울산·영천·경산·대구)
+    type: polygon
+    coords: [[128.45, 35.45], [129.5, 35.4], [129.62, 36.25], [128.9, 36.45], [128.45, 36.1], [128.45, 35.45]]
   ulleungdo: {type: circle, circle: [130.8656, 37.505, 0.06]}
-  dokdo: {type: circle, circle: [131.8653, 37.2412, 0.022]}
+  dokdo: {type: circle, circle: [131.8653, 37.2412, 0.04]}    # 실제보다 크게(단순화에서 사라지지 않게)
+  # 보주(의주): 1117년 고려가 되찾음
+  boju_c: {type: circle, circle: [124.45, 40.25, 0.2]}
+  boju_land: {type: intersect, of: [boju_c, korea_land]}
 
 wikidata_fix:
   Republic of Korea: Q884
@@ -30,7 +55,16 @@ wikidata_fix:
   Joseon: ""
 
 ops:
-  # ---------------- 고대
+  # ---------------- 고대 (D02=A: 『삼국유사』 기원전 2333년부터, 영역은 추정)
+  - {id: D02, op: fill, name: Gojoseon, years: [-2333, -198], from_name: Gojoseon, from_year: -197, uncertain: true}
+  # 부여 (K15): 다른 나라가 없는 빈 땅에만 추정 영역으로
+  - {id: K15, op: fill, name: Buyeo, years: [-200, 494], region: buyeo, uncertain: true}
+  # D01=A: 『삼국사기』 건국 연도부터 (초기 영역은 추정)
+  - {id: D01, op: retime, name: Goguryeo, start: -37}
+  - {id: D01, op: add, name: Baekje, years: [-18, 233], region: baekje_early, uncertain: true, carve_names: [Mahan]}
+  - {id: D01, op: add, name: Baekje, years: [234, 346], region: baekje_han, uncertain: true, carve_names: [Mahan]}
+  - {id: D01, op: add, name: Silla, years: [-57, 100], region: silla_early, uncertain: true, carve_names: [Jinhan]}
+  - {id: D01, op: add, name: Silla, years: [101, 377], region: silla_east, uncertain: true, carve_names: [Jinhan]}
   - {id: K16, op: transfer, src: Gojoseon, dst: Han Dynasty, years: [-107, -92]}
   - {id: K19, op: transfer, src: Dong-okjeo, dst: Goguryeo, years: [57, 153]}
   - {id: K14, op: rename, name: Byeonhan, years: [42, 562], to: Gaya, Wikipedia: Gaya confederacy}
@@ -51,7 +85,9 @@ ops:
   - {id: K05, op: retime, name: Hubaekje, end: 936}
 
   # ---------------- 고려
-  - {id: K21, op: expand, name: Goryeo, years: [994, 1259], region: goryeo_north_land}
+  - {id: K21, op: expand, name: Goryeo, years: [994, 1043], region: gangdong_land}
+  - {id: K21, op: expand, name: Goryeo, years: [1044, 1259], region: goryeo_north_land}
+  - {id: K21, op: expand, name: Goryeo, years: [1117, 1259], region: boju_land}
   - {id: K08, op: transfer, src: Tamna, dst: Goryeo, years: [1105, 1259]}
   - {id: K08, op: delete, name: Tamna, years: [1260, 1278]}
   - {id: K07, op: restore, name: Goryeo, years: [1260, 1355], from_year: 1259}

@@ -10,6 +10,8 @@
 - transfer  : 특정 기간 A 나라 영역을 B 나라에 합치기 (A 는 사라짐)
 - restore   : 특정 기간 나라 영역을 다른 해의 영역으로 되살리기
 - expand    : 특정 기간 나라 영역에 지역(region)을 더하기
+- add       : 특정 기간 새 영역 추가 (uncertain: true 면 '추정 영역'으로 점선 표시)
+- fill      : 다른 나라가 없는 빈 땅에만 영역 채우기 (추정 영역용)
 - extract   : 특정 기간 여러 나라에서 지역(region)을 떼어 새 나라로 만들기
 - erase     : 특정 기간 나라에서 지역 지우기
 - delete    : 특정 기간 나라 지우기
@@ -25,14 +27,14 @@ import shapely
 import yaml
 from shapely.geometry import Point, box
 
-META_COLS = ["Name", "f", "t", "Area", "Wikipedia", "Wikidata", "Components", "MemberOf", "patch"]
+META_COLS = ["Name", "f", "t", "Area", "Wikipedia", "Wikidata", "Components", "MemberOf", "patch", "u"]
 TINY = 0.004  # 이보다 작은 조각(도² 단위, 약 40km²)은 깎고 남은 찌꺼기로 보고 버림
 
 
 # ---------------------------------------------------------------- 기본 도구
 def _row(df: gpd.GeoDataFrame, **kw) -> dict:
     base = {c: "" for c in META_COLS}
-    base.update({"Area": 0.0})
+    base.update({"Area": 0.0, "u": 0})
     base.update(kw)
     return base
 
@@ -76,10 +78,12 @@ def clean(geom, near=None):
     return shapely.union_all(keep)
 
 
-def carve(df, a: int, b: int, geom, keep_names=()):
+def carve(df, a: int, b: int, geom, keep_names=(), only_names=None):
     """[a, b] 기간 동안 다른 나라들에서 geom 영역을 깎아냄 (제국·연합 경계는 그대로)."""
     df = bound(df, a, b)
     m = (df.f >= a) & (df.t <= b) & ~is_group(df) & ~df.Name.isin(keep_names)
+    if only_names is not None:
+        m &= df.Name.isin(only_names)
     idx = df.index[m & df.geometry.intersects(geom)]
     for i in idx:
         g = clean(shapely.difference(df.at[i, "geometry"], geom), near=geom)
@@ -87,7 +91,7 @@ def carve(df, a: int, b: int, geom, keep_names=()):
     return df[~df.geometry.is_empty].reset_index(drop=True)
 
 
-def union_into(df, name: str, a: int, b: int, geom, meta: dict | None = None, patch=""):
+def union_into(df, name: str, a: int, b: int, geom, meta: dict | None = None, patch="", uncertain=0):
     """[a, b] 기간 name 영역에 geom 을 합침. 그 기간에 name 이 없으면 새로 만듦."""
     df = bound(df, a, b)
     m = (df.Name == name) & (df.f >= a) & (df.t <= b)
@@ -98,7 +102,7 @@ def union_into(df, name: str, a: int, b: int, geom, meta: dict | None = None, pa
         covered.update(range(int(df.at[i, "f"]), int(df.at[i, "t"]) + 1))
     gaps = _ranges([y for y in range(a, b + 1) if y not in covered])
     template = meta or _template(df, name)
-    new = [_row(df, **{**template, "Name": name, "f": s, "t": e, "patch": patch}) | {"geometry": geom} for s, e in gaps]
+    new = [_row(df, **{**template, "Name": name, "f": s, "t": e, "patch": patch, "u": uncertain}) | {"geometry": geom} for s, e in gaps]
     if new:
         df = pd.concat([df, gpd.GeoDataFrame(new, geometry="geometry", crs=df.crs)], ignore_index=True)
     return df
@@ -140,17 +144,28 @@ def merge_same(df, name: str):
 
 # ---------------------------------------------------------------- 지역
 def build_regions(spec: dict, countries: gpd.GeoDataFrame) -> dict:
+    """지역 정의를 실제 도형으로. 다른 지역을 참조하는 정의는 순서와 상관없이 풀어요."""
     regions = {}
-    for key, r in (spec or {}).items():
-        if r["type"] == "countries":
-            own = shapely.union_all(countries[countries.ADM0_A3.isin(r["iso"])].geometry.values)
-            others = shapely.union_all(countries[~countries.ADM0_A3.isin(r["iso"])].geometry.values)
-            g = shapely.difference(own.buffer(r.get("sea_buffer", 0.5)), others)
-            if "clip" in r:
-                g = shapely.intersection(g, _geom(r["clip"], regions))
+    pending = dict(spec or {})
+    while pending:
+        progressed = False
+        for key, r in list(pending.items()):
+            try:
+                if r["type"] == "countries":
+                    own = shapely.union_all(countries[countries.ADM0_A3.isin(r["iso"])].geometry.values)
+                    others = shapely.union_all(countries[~countries.ADM0_A3.isin(r["iso"])].geometry.values)
+                    g = shapely.difference(own.buffer(r.get("sea_buffer", 0.5)), others)
+                    if "clip" in r:
+                        g = shapely.intersection(g, _geom(r["clip"], regions))
+                else:
+                    g = _geom(r, regions)
+            except KeyError:
+                continue
             regions[key] = shapely.make_valid(g)
-        else:
-            regions[key] = _geom(r, regions)
+            del pending[key]
+            progressed = True
+        if not progressed:
+            raise ValueError(f"지역 정의를 풀 수 없어요: {list(pending)}")
     return regions
 
 
@@ -253,6 +268,31 @@ def _apply(df, op, regions):
                 g = shapely.union(g, geom_of(df, extra["name"], extra["year"]))
         df = carve(df, a, b, g, keep_names=[name])
         return union_into(df, name, a, b, g, meta=op.get("meta"), patch=pid)
+
+    if kind == "add":
+        g = regions[op["region"]]
+        u = 1 if op.get("uncertain") else 0
+        if op.get("carve", True):
+            df = carve(df, a, b, g, keep_names=[op["name"]], only_names=op.get("carve_names"))
+        return union_into(df, op["name"], a, b, g, meta=op.get("meta"), patch=pid, uncertain=u)
+
+    if kind == "fill":
+        # 다른 나라가 없는 빈 땅에만 채우기 (추정 영역용). 다른 나라의 연도 경계마다 나눠서 계산.
+        name = op["name"]
+        g = geom_of(df, op["from_name"], op["from_year"]) if "from_year" in op else regions[op["region"]]
+        u = 1 if op.get("uncertain") else 0
+        near = df[(df.f <= b) & (df.t >= a) & ~is_group(df) & (df.Name != name) & df.geometry.intersects(g)]
+        cuts = sorted({y for y in set(near.f.tolist()) | set((near.t + 1).tolist()) if a < y <= b} | {a, b + 1})
+        template = _template(df, name)
+        new = []
+        for s0, s1 in zip(cuts[:-1], cuts[1:]):
+            others = near[(near.f <= s0) & (near.t >= s0)]
+            piece = clean(shapely.difference(g, shapely.union_all(others.geometry.values))) if len(others) else g
+            if piece is not None and not piece.is_empty:
+                new.append(_row(df, **{**template, "Name": name, "f": s0, "t": s1 - 1, "patch": pid, "u": u}) | {"geometry": piece})
+        if new:
+            df = pd.concat([df, gpd.GeoDataFrame(new, geometry="geometry", crs=df.crs)], ignore_index=True)
+        return df
 
     if kind == "expand":
         g = regions[op["region"]]
