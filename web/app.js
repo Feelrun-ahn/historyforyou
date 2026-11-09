@@ -76,6 +76,8 @@
 
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const $ = (id) => document.getElementById(id);
+  // 화면에 그 요소가 없으면(예: 옛 index.html 이 남아 있을 때) 건너뛰어요
+  const bind = (id, ev, fn, opt) => { const n = $(id); if (n) n.addEventListener(ev, fn, opt); };
 
   // ---------------------------------------------------------------- 상태
   const state = {
@@ -1965,7 +1967,7 @@
   }
   function setupFactions() {
     const modal = $('factions');
-    $('fac-close').addEventListener('click', closeFactions);
+    bind('fac-close', 'click', closeFactions);
     modal.addEventListener('click', (e) => { if (e.target === modal) closeFactions(); });
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !modal.hidden) closeFactions(); });
   }
@@ -3262,9 +3264,9 @@
     });
   }
   function setupCampaign() {
-    $('campaign-stop').addEventListener('click', () => stopCampaign(true));
-    $('cp-play').addEventListener('click', () => campaignSetPlaying(!campaign.playing));
-    $('cp-restart').addEventListener('click', () => { campaign.T = campaign.t0; campaignDraw(true); campaignSetPlaying(true); });
+    bind('campaign-stop', 'click', () => stopCampaign(true));
+    bind('cp-play', 'click', () => campaignSetPlaying(!campaign.playing));
+    bind('cp-restart', 'click', () => { campaign.T = campaign.t0; campaignDraw(true); campaignSetPlaying(true); });
     $('cp-speeds').replaceChildren(...CP_SPEEDS.map((v) => el('button', { 'data-speed': String(v), text: `${v}×`, onclick: () => { campaign.speed = v; renderCampaignSpeed(); savePrefs(); } })));
     const scrub = $('cp-scrub');
     let wasPlaying = false;
@@ -3494,10 +3496,10 @@
     tourSchedule();
   }
   function setupTour() {
-    $('tour-prev').addEventListener('click', () => { tourSetPlaying(false); tourGo(tour.i - 1); });
-    $('tour-next').addEventListener('click', () => { tourSetPlaying(false); tourGo(tour.i + 1); });
-    $('tour-play').addEventListener('click', () => tourSetPlaying(!tour.playing));
-    $('tour-close').addEventListener('click', () => endTour());
+    bind('tour-prev', 'click', () => { tourSetPlaying(false); tourGo(tour.i - 1); });
+    bind('tour-next', 'click', () => { tourSetPlaying(false); tourGo(tour.i + 1); });
+    bind('tour-play', 'click', () => tourSetPlaying(!tour.playing));
+    bind('tour-close', 'click', () => endTour());
   }
   function endTour({ reopen = true, silent = false } = {}) {
     if (!tour.active) return;
@@ -4932,8 +4934,8 @@
       stopPlay();
       setYear(addYears(state.year, parseInt(b.dataset.step, 10)));
     }));
-    $('play-btn').addEventListener('click', () => (state.playing ? stopPlay() : startPlay()));
-    $('speed-btn').addEventListener('click', () => {
+    bind('play-btn', 'click', () => (state.playing ? stopPlay() : startPlay()));
+    bind('speed-btn', 'click', () => {
       state.speed = SPEEDS[(SPEEDS.indexOf(state.speed) + 1) % SPEEDS.length];
       renderSpeed();
       savePrefs();
@@ -5222,8 +5224,8 @@
     card.setAttribute('tabindex', '-1');
     const open = () => { modal.hidden = false; card.scrollTop = 0; card.focus({ preventScroll: true }); };
     const close = () => { modal.hidden = true; $('about-btn').focus(); };
-    $('about-btn').addEventListener('click', open);
-    $('about-close').addEventListener('click', close);
+    bind('about-btn', 'click', open);
+    bind('about-close', 'click', close);
     modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !modal.hidden) close(); });
   }
@@ -5433,13 +5435,13 @@
       setupTour();
       setupFactions();
       document.querySelectorAll('#mode-switch button').forEach((b) => b.addEventListener('click', () => setMode(b.dataset.mode)));
-      $('panel-close').addEventListener('click', closePanel);
-      $('panel-back').addEventListener('click', goBack);
+      bind('panel-close', 'click', closePanel);
+      bind('panel-back', 'click', goBack);
       syncModeSwitch();
       if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { syncModeSwitch(); fitDock(); });
       window.addEventListener('resize', () => { syncModeSwitch(); fitDock(); });
-      $('year-event').addEventListener('click', () => openChrono(state.year));
-      $('notice-more').addEventListener('click', openNoticePanel);
+      bind('year-event', 'click', () => openChrono(state.year));
+      bind('notice-more', 'click', openNoticePanel);
       renderYear();
 
       map.on('styleimagemissing', (e) => { if (e.id === 'chev') addChevron(); if (e.id === 'evt') addDiamond(); });
